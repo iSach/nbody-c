@@ -15,6 +15,6 @@ Then run:
 
 `./nbodysimul file galaxy3.txt bht 100 0.1 gif` From the galaxy3.txt file
 
-`./nbodysimul random 10000 bht 100 0.1 gif` Random with 5k particles
+`./nbodysimul random 5000 bht 100 0.1 gif` Random with 5k particles
 
-`./nbodysimul file galaxy3.txt naive 100 0.1 gif` Random with 1K particles and brute force
+`./nbodysimul random 1000 naive 100 0.1 gif` Random with 1K particles and brute force
