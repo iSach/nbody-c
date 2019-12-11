@@ -10,52 +10,67 @@ static int bhtreeExternal(BHTree *bht);
 static void bhtreePrintExtra(BHTree *bht, FILE *fp, int recursion, int type);
 
 struct BHTree_t {
-  Quad *quad;     // Région correspondant à la racine de ce (sous-)arbre
-  BHTree *nw;     // sous-arbre Nord-Ouest
-  BHTree *ne;     // sous-arbre Nord-Est
-  BHTree *sw;     // sous-arbre Sud-Ouest
-  BHTree *se;     // sous-arbre Sud-Est
-  Body *body;     // Particule associée ou particule équivalente (centre inertie).
+	Quad *quad;     // Région correspondant à la racine de ce (sous-)arbre
+	BHTree *nw;     // sous-arbre Nord-Ouest
+	BHTree *ne;     // sous-arbre Nord-Est
+	BHTree *sw;     // sous-arbre Sud-Ouest
+	BHTree *se;     // sous-arbre Sud-Est
+	Body *body;     // Particule associée ou particule équivalente (centre inertie).
 };
 
 BHTree *bhtreeCreate(Quad *q) {
-  BHTree *tree = malloc(sizeof(BHTree));
-  tree->quad = q;
-  tree->nw = NULL;
-  tree->ne = NULL;
-  tree->sw = NULL;
-  tree->se = NULL;
-  tree->body = NULL;
-  return tree;
+	if(q == NULL) {
+		printf("Erreur argument.\n");
+		exit(-1);
+	}
+
+	BHTree *tree = malloc(sizeof(BHTree));	
+	if(tree == NULL) {
+		printf("Erreur malloc\n");
+		exit(-1);
+	}
+
+	tree->quad = q;
+	tree->nw = NULL;
+	tree->ne = NULL;
+	tree->sw = NULL;
+	tree->se = NULL;
+	tree->body = NULL;
+
+	return tree;
 }
 
 void bhtreeFree(BHTree *bht) {
-  if (bht == NULL) {
-    printf("Erreur : free(NULL)");
-    exit(-1);
-  }
+	if (bht == NULL)
+		exit(-1);
 
-  if (bht->nw != NULL)
-    bhtreeFree(bht->nw);
-  if (bht->ne != NULL)
-    bhtreeFree(bht->ne);
-  if (bht->sw != NULL)
-    bhtreeFree(bht->sw);
-  if (bht->se != NULL)
-    bhtreeFree(bht->se);
-  free(bht);
+	// Pas une feuille.
+	if(!bhtreeExternal(bht))  {
+		// Pas une feuille -> alloué dans bhtreeinsert (3)
+		if (bht->body != NULL) bodyFree(bht->body);
+
+		// Free la particule associée + les fils.
+		bhtreeFree(bht->nw);
+		bhtreeFree(bht->ne);
+		bhtreeFree(bht->sw);
+		bhtreeFree(bht->se);
+	}
+
+  	free(bht);
 }
 
 void bhtreeInsert(BHTree *bht, Body *b) {
-	if(bht == NULL || b == NULL)
-		exit(-1);
+	if(bht == NULL || b == NULL) {
+		printf("Erreur argument\n");
+		return;
+	}
 
 	if(!quadContains(bht->quad, bodyGetrx(b), bodyGetry(b)))
 		return;
 
 	if (bht->body == NULL) { // (1) Ne contient pas de particule, 1re itération
 		bht->body = b;
-  	} else if (!bhtreeExternal(bht)) { // (2) Noeud interne, contient une part. équivalente
+  	} else if (!bhtreeExternal(bht)) { // (2) Noeud interne, contient une particule équivalente
 		bodyAggregate(bht->body, b);
 		if(bht->nw != NULL && quadContains(bht->nw->quad, bodyGetrx(b), bodyGetry(b))) {
 			bhtreeInsert(bht->nw, b);
@@ -87,6 +102,7 @@ void bhtreeUpdateForce(BHTree *bht, Body *b) {
 
 	double s = quadLength(bht->quad);
 	double d = bodyDistanceTo(bht->body, b);
+
 	if((bhtreeExternal(bht) && bht->body != b) || s / d < THETA) {
 		bodyAddForce(b, bht->body);
 	} else if(!bhtreeExternal(bht)) {
@@ -98,9 +114,9 @@ void bhtreeUpdateForce(BHTree *bht, Body *b) {
 }
 
 void bhtreePrint(BHTree *bht, FILE *fp) {
-	if(bht == NULL) {
-		printf("Erreur bhtreePrint(null)");
-		exit(-1);
+	if(bht == NULL || fp == NULL) {
+		printf("Erreur argument\n");
+		return;
 	}
 
 	bhtreePrintExtra(bht, fp, 0, 0);
@@ -108,11 +124,16 @@ void bhtreePrint(BHTree *bht, FILE *fp) {
 
 /**
  * Démarre les appels récursif pour print l'arbre.
- * Donne des paramètres en + :
+ * Passe des paramètres en + entre les appels :
  * recursion: pour dessiner correctement l'espace avant les flèches.
  * type: Root (0), NW (1), NE (2), SW (3) ou SE (4).
  */
 static void bhtreePrintExtra(BHTree *bht, FILE *fp, int recursion, int type) {
+	if(bht == NULL || fp == NULL) {
+		printf("Erreur argument\n");
+		return;
+	}
+
 	if(type == 0) {
 		fprintf(fp, "Root:");
 	} else {
@@ -142,6 +163,11 @@ static void bhtreePrintExtra(BHTree *bht, FILE *fp, int recursion, int type) {
 
 // Renvoie si le sous-arbre donné est un noeud externe.
 static int bhtreeExternal(BHTree *bht) {
-  return bht->nw == NULL && bht->ne == NULL &&
-         bht->sw == NULL && bht->se == NULL;
+	if(bht == NULL) {
+		printf("Erreur argument\n");
+		return -1;
+	}
+
+  	return bht->nw == NULL && bht->ne == NULL &&
+	  bht->sw == NULL && bht->se == NULL;
 }

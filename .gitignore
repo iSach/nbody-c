@@ -93,4 +93,9 @@ Temporary Items
 # Ignore all local history of files
 .history
 
+.zip
+
+# Matlab
+.m 
+
 # End of https://www.gitignore.io/api/macos,visualstudiocode
