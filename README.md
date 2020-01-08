@@ -18,3 +18,5 @@ Then run:
 `./nbodysimul random 5000 bht 100 0.1 gif` Random with 5k particles
 
 `./nbodysimul random 1000 naive 100 0.1 gif` Random with 1K particles and brute force
+
+This project was awarded the grade of `20/20`.
