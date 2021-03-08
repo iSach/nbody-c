@@ -4,7 +4,8 @@ Implementation in C of the Barnes-Hut solution to the N-Body problem.
 
 Time comparison in graphe.pdf
 
-Result example as a gif in anim.gif
+Result example as a gif in anim.gif:
+![](anim.gif)
 
 Example to run the program during 100s with 0.1s between each physics update.
 First compile:
